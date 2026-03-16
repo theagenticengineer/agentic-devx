@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# post-checkout hook
+#
+# Enforces worktree-only branch creation:
+#   1. Non-main branches must be created as worktrees, not direct checkouts
+#   2. Worktrees must live inside .worktrees/ (relative to main repo root)
+#   3. Branch name must match: main | (feat|fix|chore|docs|refactor|test)/N-slug
+
+set -euo pipefail
+
+OLD_REF="$1"
+NEW_REF="$2"
+FLAG="$3"  # 1 = branch checkout, 0 = file checkout
+
+# Only act on branch checkouts
+[[ "$FLAG" == "1" ]] || exit 0
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+
+# Allow checkout to main (e.g., git checkout main)
+[[ "$BRANCH" == "main" ]] && exit 0
+
+# --- Rule 1: Must be a worktree, not a direct checkout ---
+MAIN_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+CURRENT_ROOT=$(git rev-parse --show-toplevel)
+
+if [[ "$CURRENT_ROOT" == "$MAIN_ROOT" ]]; then
+  echo "ERROR: Direct branch checkout is not allowed." >&2
+  echo "Use: git worktree add .worktrees/<branch> -b <branch>" >&2
+  git checkout - --quiet 2>/dev/null || true
+  exit 1
+fi
+
+# --- Rule 2: Worktree must be inside .worktrees/ ---
+WORKTREES_DIR="${MAIN_ROOT}/.worktrees"
+case "$CURRENT_ROOT" in
+  "${WORKTREES_DIR}"*)
+    # Inside .worktrees/ — OK
+    ;;
+  *)
+    echo "ERROR: Worktrees must be created inside .worktrees/" >&2
+    echo "Use: git worktree add .worktrees/<branch> -b <branch>" >&2
+    # Self-clean: remove the invalid worktree and branch
+    git -C "$MAIN_ROOT" worktree remove "$CURRENT_ROOT" --force 2>/dev/null || true
+    git -C "$MAIN_ROOT" branch -D "$BRANCH" 2>/dev/null || true
+    exit 1
+    ;;
+esac
+
+# --- Rule 3: Branch name must match the required pattern ---
+PATTERN='^(main|(feat|fix|chore|docs|refactor|test)/[0-9]+-[a-z0-9-]+)$'
+if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+  echo "ERROR: Invalid branch name: $BRANCH" >&2
+  echo "Required pattern: type/N-slug (e.g., feat/1-add-feature, chore/2-fix-docs)" >&2
+  echo "Allowed types: feat, fix, chore, docs, refactor, test" >&2
+  # Self-clean: remove the invalid worktree and branch
+  git -C "$MAIN_ROOT" worktree remove "$CURRENT_ROOT" --force 2>/dev/null || true
+  git -C "$MAIN_ROOT" branch -D "$BRANCH" 2>/dev/null || true
+  exit 1
+fi
+
+exit 0
