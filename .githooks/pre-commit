@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# pre-commit hook
+#
+# Runs markdown linting via mise before each commit.
+
+set -euo pipefail
+
+mise run lint

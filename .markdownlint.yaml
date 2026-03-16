@@ -1,0 +1,16 @@
+default: true
+
+MD013:
+  line_length: 100
+  heading_line_length: 100
+  code_block_line_length: 100
+
+# --- Disabled rules ---
+# Add disabled here, with a comment explaining why the rule needed to be disabled.
+
+# MD033: inline HTML is used in wiki-style links and badge images
+MD033: false
+
+# MD041: first line need not be h1 — skills and templates open with a purpose line,
+# not a document title
+MD041: false

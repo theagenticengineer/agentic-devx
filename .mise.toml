@@ -1,0 +1,20 @@
+[tools]
+"npm:markdownlint-cli2" = "0.17.2"
+
+[tasks.lint]
+run = """
+markdownlint-cli2             \
+  --config .markdownlint.yaml \
+  '**/*.md'                   \
+  '!.wiki/**'                 \
+  '!.worktrees/**'            \
+  '!tmp/**'                   \
+  '!node_modules/**'
+"""
+
+[tasks.setup]
+description = "Configure git hooks path (run once after clone or devcontainer start)"
+run = """
+REPO_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
+git config core.hooksPath "$REPO_ROOT/.githooks"
+"""
