@@ -1,0 +1,37 @@
+{
+  "name": "agentic-devx",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
+  },
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude/projects ${localEnv:HOME}/.config/gh ${localEnv:HOME}/.config/graphite && [ -f ${localEnv:HOME}/.claude/container.claude.json ] || echo '{}' > ${localEnv:HOME}/.claude/container.claude.json",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude-host,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude/projects,target=/home/vscode/.claude/projects,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude/container.claude.json,target=/home/vscode/.claude-container.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/graphite,target=/home/vscode/.config/graphite,type=bind,consistency=cached"
+  ],
+  "remoteEnv": {
+    "HOST_PROJECT_PATH": "${localWorkspaceFolder}",
+    "CONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "UV_LINK_MODE": "copy"
+  },
+  "postCreateCommand": ".devcontainer/install-tools.sh",
+  "postStartCommand": ".devcontainer/link-claude-config.sh && .devcontainer/check-auth.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "DavidAnson.vscode-markdownlint",
+        "yzhang.markdown-all-in-one"
+      ],
+      "settings": {
+        "editor.wordWrapColumn": 100,
+        "editor.tabSize": 2
+      }
+    }
+  }
+}
