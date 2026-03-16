@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# commit-msg hook
+#
+# Validates commit messages match: type(#N): message
+# where message is at least 10 characters long.
+# Allowed types: feat, fix, chore, docs, refactor, test
+
+set -euo pipefail
+
+MSG_FILE="$1"
+MSG=$(head -1 "$MSG_FILE")
+
+PATTERN='^(feat|fix|chore|docs|refactor|test)\(#[0-9]+\): .{10,}'
+
+if [[ ! "$MSG" =~ $PATTERN ]]; then
+  echo "ERROR: Invalid commit message: $MSG" >&2
+  echo "Required format: type(#N): message (message >= 10 chars)" >&2
+  echo "Allowed types: feat, fix, chore, docs, refactor, test" >&2
+  exit 1
+fi
+
+exit 0
