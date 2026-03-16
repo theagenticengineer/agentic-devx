@@ -18,3 +18,11 @@ run = """
 REPO_ROOT=$(git worktree list --porcelain | awk 'NR==1{print $2}')
 git config core.hooksPath "$REPO_ROOT/.githooks"
 """
+
+[tasks.review]
+description = "Run CI code review script"
+run = "scripts/ci-review.sh"
+
+[tasks.test]
+description = "Run tests (project-specific, no-op placeholder)"
+run = "echo 'No tests configured yet'"
