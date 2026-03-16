@@ -4,7 +4,8 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/node:1": { "version": "22" },
-    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": { "version": "0.10.10" }
   },
   "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude/projects ${localEnv:HOME}/.config/gh ${localEnv:HOME}/.config/graphite && [ -f ${localEnv:HOME}/.claude/container.claude.json ] || echo '{}' > ${localEnv:HOME}/.claude/container.claude.json",
   "mounts": [

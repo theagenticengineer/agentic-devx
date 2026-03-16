@@ -64,18 +64,44 @@ else
   echo ""
 fi
 
+# --- uv ---
+if command -v uv &>/dev/null; then
+  echo "[ok] uv: $(uv --version 2>/dev/null || echo 'installed')"
+else
+  ok=false
+  echo "[!!] uv: not found"
+  echo "     devcontainer.json should have the jsburckhardt/devcontainer-features/uv feature"
+  echo "     Rebuild the container."
+  echo ""
+fi
+
 # --- PAL MCP Server ---
 mcp_json="${HOME}/.claude/.mcp.json"
 if [[ -f "$mcp_json" ]] && grep -q '"pal"' "$mcp_json" 2>/dev/null; then
-  if [[ -n "${GEMINI_API_KEY:-}" ]]; then
-    echo "[ok] pal: configured (GEMINI_API_KEY set)"
-  else
+  if ! command -v uvx &>/dev/null; then
+    ok=false
+    echo "[!!] pal: configured but uvx not installed (required to run PAL)"
+    echo ""
+  elif [[ -z "${GEMINI_API_KEY:-}" ]]; then
     ok=false
     echo "[!!] pal: configured but GEMINI_API_KEY not set"
     echo "     Set on your HOST: export GEMINI_API_KEY=\"your-key\""
     echo "     Get a key: https://aistudio.google.com/apikey"
     echo "     Then rebuild the container."
     echo ""
+  else
+    # Live connectivity test: send MCP initialize handshake via stdin
+    init_req='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"check-auth","version":"0.1"}}}'
+    pal_response=$(printf '%s\n' "$init_req" | timeout 30 uvx --from git+https://github.com/BeehiveInnovations/pal-mcp-server.git pal-mcp-server 2>/dev/null | head -1)
+    if echo "$pal_response" | grep -q '"result"' 2>/dev/null; then
+      echo "[ok] pal: connected (GEMINI_API_KEY set, MCP handshake passed)"
+    else
+      ok=false
+      echo "[!!] pal: configured but MCP handshake failed"
+      echo "     GEMINI_API_KEY is set but the server did not respond."
+      echo "     Check your key at: https://aistudio.google.com/apikey"
+      echo ""
+    fi
   fi
 else
   echo "[--] pal: not configured (optional)"
